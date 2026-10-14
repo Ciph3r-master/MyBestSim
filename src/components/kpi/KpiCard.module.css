@@ -2,6 +2,32 @@
   padding: 20px;
 }
 
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+.more {
+  margin-left: auto;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.clickable:hover .more,
+.clickable:focus-visible .more {
+  opacity: 1;
+  transform: translateX(2px);
+}
+
+@media (hover: none) {
+  .more { opacity: 0.6; }
+}
+
 .head {
   display: flex;
   align-items: center;

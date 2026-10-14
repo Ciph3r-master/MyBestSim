@@ -1,5 +1,4 @@
 import type { CatalogStats, Product } from '@/types/catalog'
-import { ActiveFilter } from '@/components/filters/ActiveFilter'
 import { KpiGrid } from '@/components/kpi/KpiGrid'
 import { ProviderChart } from '@/components/charts/ProviderChart'
 import { PriceDistributionChart } from '@/components/charts/PriceDistributionChart'
@@ -11,6 +10,7 @@ import { TopDestinations } from '@/components/insights/TopDestinations'
 import { CatalogFeatures } from '@/components/insights/CatalogFeatures'
 import { CatalogExtremes } from '@/components/insights/CatalogExtremes'
 import { ExcludedPricesNotice } from '@/components/insights/ExcludedPricesNotice'
+import { qualityCheckAnchor } from '@/constants/quality'
 import styles from './sections.module.css'
 
 interface StatisticsSectionProps {
@@ -18,9 +18,9 @@ interface StatisticsSectionProps {
   stats: CatalogStats
   globalStats: CatalogStats
   provider: string | null
-  onProviderChange: (provider: string | null) => void
   onProviderToggle: (provider: string) => void
-  onShowQuality: () => void
+  /** Ouvre l'onglet Qualité, éventuellement sur un élément précis (ancre). */
+  onShowQuality: (anchor?: string) => void
 }
 
 export function StatisticsSection({
@@ -28,14 +28,15 @@ export function StatisticsSection({
   stats,
   globalStats,
   provider,
-  onProviderChange,
   onProviderToggle,
   onShowQuality,
 }: StatisticsSectionProps) {
   return (
     <>
-      {provider && <ActiveFilter label={provider} onClear={() => onProviderChange(null)} />}
-      <ExcludedPricesNotice excluded={stats.excludedFromPrices} onShowDetails={onShowQuality} />
+      <ExcludedPricesNotice
+        excluded={stats.excludedFromPrices}
+        onShowDetails={() => onShowQuality(qualityCheckAnchor('currency'))}
+      />
 
       <KpiGrid stats={stats} isFiltered={provider !== null} />
 
@@ -47,7 +48,11 @@ export function StatisticsSection({
         <DataTiersChart data={stats.dataTiers} />
         <PricePerGbRanking providers={globalStats.byProvider} selected={provider} onSelect={onProviderToggle} />
         <PriceIndexChart providers={globalStats.byProvider} selected={provider} onSelect={onProviderToggle} />
-        <TopDestinations countries={stats.topCountries} />
+        <TopDestinations
+          countries={stats.topCountries}
+          zones={stats.zones}
+          onShowDetails={() => onShowQuality(qualityCheckAnchor('non-country-destinations'))}
+        />
         <CatalogFeatures
           share5G={stats.share5G}
           shareTopUp={stats.shareTopUp}

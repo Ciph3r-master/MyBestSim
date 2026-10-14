@@ -5,6 +5,12 @@
 }
 
 .card {
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -39,4 +45,13 @@
 
 @media (max-width: 520px) {
   .grid { grid-template-columns: 1fr; }
+}
+
+.card:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
 }

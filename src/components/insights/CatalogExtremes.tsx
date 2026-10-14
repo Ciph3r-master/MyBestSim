@@ -2,6 +2,8 @@ import type { Product } from '@/types/catalog'
 import { formatCurrency } from '@/utils/format'
 import { Panel } from '@/components/ui/Panel'
 import { PanelEmpty } from '@/components/ui/PanelEmpty'
+import { useProductDetail } from '@/hooks/useProductDetail'
+import { selections } from '@/services/selections'
 import styles from './CatalogExtremes.module.css'
 
 interface ExtremeCardProps {
@@ -11,15 +13,16 @@ interface ExtremeCardProps {
 }
 
 function ExtremeCard({ tag, product, tone }: ExtremeCardProps) {
+  const { openDetail } = useProductDetail()
   return (
-    <article className={`${styles.card} ${styles[tone]}`}>
+    <button type="button" className={`${styles.card} ${styles[tone]}`} onClick={() => openDetail(selections.product(product))}>
       <span className={styles.tag}>{tag}</span>
       <strong className={styles.price}>{formatCurrency(product.price)}</strong>
       <span className={styles.name}>{product.productName}</span>
       <small className={styles.meta}>
         {product.provider} · {product.network} · {product.validityDays} j
       </small>
-    </article>
+    </button>
   )
 }
 
