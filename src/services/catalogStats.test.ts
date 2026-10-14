@@ -48,6 +48,27 @@ describe('computeStats', () => {
     expect(stats.byProvider[0].pricePerGb).toBeNull()
   })
 
+  it('sépare pays et zones dans les destinations', () => {
+    const stats = computeStats(
+      products([
+        {},
+        {},
+        { country_code: 'JP', country_name: 'Japon' },
+        { country_code: 'WW', country_name: 'Monde' },
+        { country_code: 'WW', country_name: 'Monde' },
+        { country_code: 'WW', country_name: 'Monde' },
+      ]),
+    )
+    expect(stats.countryCount).toBe(2)
+    expect(stats.zoneCount).toBe(1)
+    // La zone, pourtant la plus fournie, n'apparaît pas dans le classement des pays.
+    expect(stats.topCountries).toEqual([
+      { name: 'France', count: 2 },
+      { name: 'Japon', count: 1 },
+    ])
+    expect(stats.zones).toEqual([{ name: 'Monde', count: 3 }])
+  })
+
   it("calcule l'indice de prix à offre égale indépendamment de la composition du catalogue", () => {
     // A ne vend que des petits forfaits (€/Go élevé), B que des gros : mais à offre égale, A est moins cher.
     const stats = computeStats(
@@ -81,6 +102,13 @@ describe('chiffres du jeu MyBestSim (partie 1 du test)', () => {
     expect(stats.medianData).toBe(5)
     expect(stats.unlimited).toBe(653)
     expect(stats.byProvider[0]).toMatchObject({ name: 'Airalo', count: 722 })
+  })
+
+  it('couvre 50 pays et 4 zones (et non « 54 destinations »)', () => {
+    expect(stats.countryCount).toBe(50)
+    expect(stats.zoneCount).toBe(4)
+    expect(stats.zones.map((z) => z.name)).toEqual(['Europe', 'Asie', 'Amérique du Nord', 'Monde'])
+    expect(stats.topCountries[0]).toEqual({ name: 'Indonésie', count: 104 })
   })
 
   it("ne montre aucun écart tarifaire structurel entre fournisseurs (±1 %)", () => {

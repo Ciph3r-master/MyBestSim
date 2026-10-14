@@ -104,10 +104,16 @@ export interface CatalogStats {
   share5G: number
   shareTopUp: number
   shareUnlimited: number
-  countries: number
+  /** Destinations reconnues comme pays ISO 3166. */
+  countryCount: number
+  /** Autres destinations : en pratique des zones multi-pays (Europe, Monde…). */
+  zoneCount: number
   byProvider: ProviderStat[]
   priceDistribution: CountItem[]
   dataTiers: CountItem[]
+  /** Pays les mieux couverts (zones exclues). */
   topCountries: CountItem[]
+  /** Zones multi-pays, de la plus couverte à la moins couverte. */
+  zones: CountItem[]
   validity: CountItem[]
 }

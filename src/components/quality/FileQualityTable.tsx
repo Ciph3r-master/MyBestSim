@@ -6,7 +6,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { Switch } from '@/components/ui/Switch'
 import styles from './FileQualityTable.module.css'
 
-export const FILES_PANEL_ID = 'fichiers'
+export const FILES_PANEL_ID = 'files'
 
 interface FileQualityTableProps {
   /** Tous les fichiers chargés, actifs ou non. */

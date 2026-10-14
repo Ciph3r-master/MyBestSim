@@ -3,14 +3,30 @@ import { BASE_CURRENCY } from '@/constants/catalog'
 import { isIsoCountry } from '@/services/destinations'
 
 export const PREMIUM_THRESHOLD = 100
-const PRICE_BUCKETS = [0, 10, 20, 30, 50, 75, PREMIUM_THRESHOLD, Infinity]
+const PRICE_BOUNDS = [0, 10, 20, 30, 50, 75, PREMIUM_THRESHOLD, Infinity]
+
+export interface PriceBucket {
+  name: string
+  min: number
+  /** Borne exclue. */
+  max: number
+}
+
+/** Tranches de prix de la distribution, partagées avec le détail des produits. */
+export const PRICE_BUCKETS: PriceBucket[] = PRICE_BOUNDS.slice(0, -1).map((min, i) => {
+  const max = PRICE_BOUNDS[i + 1]
+  return { name: max === Infinity ? `${min}+` : `${min}–${max}`, min, max }
+})
+
+/** Enveloppe de data d'un produit telle qu'affichée (« 10 Go », « Illimité »). */
+export const dataTierLabel = (p: Product) => (p.dataGb == null ? 'Illimité' : `${p.dataGb} Go`)
+
+export const isPriced = (p: Product) => p.currency === BASE_CURRENCY
 const TOP_COUNTRIES = 8
 
 const average = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0)
 /** Moyenne d'un indicateur de prix : `null` plutôt que 0 quand il n'y a rien à moyenner. */
 const priceAverage = (xs: number[]) => (xs.length ? average(xs) : null)
-const isPriced = (p: Product) => p.currency === BASE_CURRENCY
-
 export function median(xs: number[]): number | null {
   if (!xs.length) return null
   const sorted = [...xs].sort((a, b) => a - b)
@@ -24,7 +40,12 @@ export const comparableKey = (p: Product) => `${isIsoCountry(p)}|${p.dataDisplay
 /** Écart relatif de chaque produit à la médiane de ses offres comparables (0 = prix médian du marché). */
 function gapsToComparableMedian(priced: Product[]): Map<Product, number> {
   const groups = new Map<string, Product[]>()
-  for (const p of priced) groups.set(comparableKey(p), [...(groups.get(comparableKey(p)) ?? []), p])
+  for (const p of priced) {
+    const key = comparableKey(p)
+    const group = groups.get(key)
+    if (group) group.push(p)
+    else groups.set(key, [p])
+  }
   const gaps = new Map<Product, number>()
   for (const group of groups.values()) {
     const m = median(group.map((p) => p.price))
@@ -49,13 +70,10 @@ function extreme(list: Product[], pick: (a: Product, b: Product) => boolean): Pr
 }
 
 function priceDistribution(list: Product[]): CountItem[] {
-  return PRICE_BUCKETS.slice(0, -1).map((lo, i) => {
-    const hi = PRICE_BUCKETS[i + 1]
-    return {
-      name: hi === Infinity ? `${lo}+` : `${lo}–${hi}`,
-      count: list.filter((p) => p.price >= lo && p.price < hi).length,
-    }
-  })
+  return PRICE_BUCKETS.map(({ name, min, max }) => ({
+    name,
+    count: list.filter((p) => p.price >= min && p.price < max).length,
+  }))
 }
 
 function byProvider(list: Product[]) {
@@ -101,13 +119,18 @@ export function computeStats(list: Product[]): CatalogStats {
     share5G: ratio(list.filter((p) => p.network === '5G').length, list.length),
     shareTopUp: ratio(list.filter((p) => p.topUp).length, list.length),
     shareUnlimited: ratio(unlimited, list.length),
-    countries: new Set(list.map((p) => p.countryName)).size,
+    countryCount: new Set(list.filter(isIsoCountry).map((p) => p.countryName)).size,
+    zoneCount: new Set(list.filter((p) => !isIsoCountry(p)).map((p) => p.countryName)).size,
     byProvider: byProvider(list),
     priceDistribution: priceDistribution(priced),
-    dataTiers: countBy(list, (p) => (p.dataGb == null ? 'Illimité' : `${p.dataGb} Go`)).sort(
+    dataTiers: countBy(list, dataTierLabel).sort(
       (a, b) => tierOrder(a.name) - tierOrder(b.name),
     ),
-    topCountries: countBy(list, (p) => p.countryName).slice(0, TOP_COUNTRIES),
+    topCountries: countBy(list.filter(isIsoCountry), (p) => p.countryName).slice(0, TOP_COUNTRIES),
+    zones: countBy(
+      list.filter((p) => !isIsoCountry(p)),
+      (p) => p.countryName,
+    ),
     validity: countBy(list, (p) => `${p.validityDays} jours`).sort((a, b) => parseInt(a.name) - parseInt(b.name)),
   }
 }

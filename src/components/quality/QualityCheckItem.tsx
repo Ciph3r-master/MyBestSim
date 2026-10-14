@@ -1,6 +1,7 @@
 import type { QualityCheck } from '@/types/quality'
 import { formatNumber } from '@/utils/format'
 import { StatusBadge } from '@/components/ui/StatusBadge'
+import { qualityCheckAnchor } from '@/constants/quality'
 import styles from './QualityCheckItem.module.css'
 
 export function QualityCheckItem({ check }: { check: QualityCheck }) {
@@ -8,7 +9,7 @@ export function QualityCheckItem({ check }: { check: QualityCheck }) {
   const remaining = (check.exampleCount ?? examples.length) - examples.length
 
   return (
-    <li className={`${styles.item} ${styles[check.status]}`}>
+    <li id={qualityCheckAnchor(check.id)} className={`${styles.item} ${styles[check.status]}`}>
       <div className={styles.head}>
         <StatusBadge status={check.status} compact />
         <h3 className={styles.label}>{check.label}</h3>
