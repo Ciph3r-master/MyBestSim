@@ -9,15 +9,18 @@
 .blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(90px);
-  opacity: 0.55;
+  /* Dégradé radial plutôt que filter: blur() : même halo diffus, sans recalcul de flou à chaque image.
+     L'animation ne touche que transform, pris en charge par la carte graphique. */
+  background: radial-gradient(circle, var(--blob) 0%, transparent 68%);
+  opacity: 0.6;
+  will-change: transform;
   animation: float 22s ease-in-out infinite alternate;
 }
 
-.indigo { width: 620px; height: 620px; background: #6366f1; top: -180px; left: -140px; }
-.teal { width: 520px; height: 520px; background: #14b8a6; bottom: -160px; right: -120px; animation-delay: -6s; }
-.pink { width: 420px; height: 420px; background: #ec4899; top: 35%; left: 45%; opacity: 0.35; animation-delay: -12s; }
-.sky { width: 360px; height: 360px; background: #0ea5e9; top: 10%; right: 10%; opacity: 0.35; animation-delay: -3s; }
+.indigo { --blob: #6366f1; width: 900px; height: 900px; top: -330px; left: -290px; }
+.teal { --blob: #14b8a6; width: 780px; height: 780px; bottom: -290px; right: -250px; animation-delay: -6s; }
+.pink { --blob: #ec4899; width: 640px; height: 640px; top: 30%; left: 40%; opacity: 0.4; animation-delay: -12s; }
+.sky { --blob: #0ea5e9; width: 560px; height: 560px; top: 5%; right: 5%; opacity: 0.4; animation-delay: -3s; }
 
 @keyframes float {
   0% { transform: translate(0, 0) scale(1); }

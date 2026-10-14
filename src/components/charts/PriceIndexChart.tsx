@@ -1,10 +1,10 @@
-import { Bar, BarChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { LazyRender } from '@/components/ui/LazyRender'
 import type { ProviderStat } from '@/types/catalog'
-import { AXIS_TICK, COLORS, TOOLTIP_PROPS } from '@/constants/theme'
+import { COLORS } from '@/constants/theme'
 import { formatSignedPercent as signedPercent } from '@/utils/format'
 import { Panel } from '@/components/ui/Panel'
 import { PanelEmpty } from '@/components/ui/PanelEmpty'
-import { coloredBar } from './barShape'
+import { IndexPlot } from './lazyPlots'
 import styles from './PriceIndexChart.module.css'
 
 interface PriceIndexChartProps {
@@ -27,6 +27,7 @@ export function PriceIndexChart({ providers, selected, onSelect }: PriceIndexCha
   // Graduations explicites et assez de décimales pour qu'elles restent distinctes sur une petite échelle.
   const ticks = [-bound, -bound / 2, 0, bound / 2, bound]
   const tickDecimals = bound < 0.05 ? 1 : 0
+  const plotHeight = Math.max(220, data.length * 24 + 40)
   const spread = data.length ? data[data.length - 1].index - data[0].index : 0
 
   return (
@@ -56,38 +57,17 @@ export function PriceIndexChart({ providers, selected, onSelect }: PriceIndexCha
             <span><i style={{ background: COLORS.cheaper }} /> moins cher que le marché</span>
             <span><i style={{ background: COLORS.pricier }} /> plus cher</span>
           </div>
-          <ResponsiveContainer width="100%" height={Math.max(220, data.length * 24 + 40)}>
-            <BarChart data={data} layout="vertical" margin={{ left: 8, right: 24 }}>
-              <CartesianGrid horizontal={false} stroke={COLORS.grid} />
-              <XAxis
-                type="number"
-                domain={[-bound, bound]}
-                ticks={ticks}
-                tickFormatter={(v: number) => signedPercent(v, tickDecimals)}
-                tick={AXIS_TICK}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis type="category" dataKey="name" width={96} tick={AXIS_TICK} axisLine={false} tickLine={false} />
-              <ReferenceLine x={0} stroke="rgba(255,255,255,0.35)" />
-              <Tooltip {...TOOLTIP_PROPS} formatter={(v) => [signedPercent(Number(v), 2), 'vs médiane du marché']} />
-              <Bar
-                dataKey="index"
-                isAnimationActive={false}
-                radius={4}
-                maxBarSize={16}
-                cursor="pointer"
-                onClick={(entry) => onSelect((entry as unknown as { name: string }).name)}
-                shape={coloredBar((name) => {
-                  const d = data.find((x) => x.name === name)
-                  return {
-                    fill: (d?.index ?? 0) <= 0 ? COLORS.cheaper : COLORS.pricier,
-                    fillOpacity: !selected || selected === name ? 0.95 : 0.3,
-                  }
-                })}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          <LazyRender height={plotHeight}>
+            <IndexPlot
+              data={data}
+              bound={bound}
+              ticks={ticks}
+              tickDecimals={tickDecimals}
+              selected={selected}
+              onSelect={onSelect}
+              height={plotHeight}
+            />
+          </LazyRender>
         </>
       )}
     </Panel>
