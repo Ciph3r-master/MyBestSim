@@ -160,7 +160,9 @@ function checkVariants(products: Product[]): QualityCheck {
     detail:
       'Même fournisseur, destination, volume et durée, mais prix, réseau (4G/5G) ou rechargeabilité différents. ' +
       'Ce sont des produits distincts (SKU différents) : ils sont tous comptés dans les statistiques.',
-    examples: groups.map(
+    // Seuls les premiers exemples sont affichés : inutile de formater les 620 offres.
+    exampleCount: groups.length,
+    examples: groups.slice(0, MAX_EXAMPLES).map(
       (g) =>
         `${g[0].productName} (${g[0].provider}) : ` +
         g.map((p) => `${formatCurrency(p.price)} ${p.network}${p.topUp ? ' rech.' : ''}`).join(' / '),
@@ -268,7 +270,7 @@ function checkNonCountryDestinations(products: Product[]): QualityCheck {
       'Chaque couple code/nom est comparé au nom officiel ISO 3166 du code (fourni par le navigateur, variantes ' +
       'd\'écriture tolérées). Sont signalés les codes absents de la norme et ceux qui y désignent un autre pays : en ' +
       'pratique des zones multi-pays (Europe, Monde…), mais aussi tout nom non officiel ou mal orthographié. ' +
-      'Ces destinations sont comptées dans les « destinations » et séparées des pays dans les analyses de prix.',
+      'Ces destinations sont présentées à part des pays (« 50 pays + 4 zones », classements, comparateur) et séparées dans les analyses de prix.',
     examples: byDestination.map((list) => {
       const { countryCode: code, countryName: name } = list[0]
       const { kind, isoName } = classifyDestination(code, name)
@@ -386,7 +388,11 @@ export function computeQualityReport(catalog: Catalog): QualityReport {
     checkPriceOutliers(products),
     checkZonePremium(products),
     checkUnlimited(products),
-  ].map((c) => ({ ...c, examples: c.examples?.slice(0, MAX_EXAMPLES), exampleCount: c.examples?.length ?? 0 }))
+  ].map((c) => ({
+    ...c,
+    examples: c.examples?.slice(0, MAX_EXAMPLES),
+    exampleCount: c.exampleCount ?? c.examples?.length ?? 0,
+  }))
 
   const counts: Record<QualityStatus, number> = { ok: 0, info: 0, warning: 0, error: 0 }
   for (const c of checks) counts[c.status]++

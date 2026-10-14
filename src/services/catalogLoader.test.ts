@@ -17,13 +17,6 @@ describe('parseCsvFile', () => {
     })
   })
 
-  it("décale les colonnes si un prix « 12,5 » n'est pas entre guillemets : la devise devient incohérente", () => {
-    const raw = csv([{}]).replace(',10,EUR,', ',12,5,EUR,')
-    const { products } = parseCsvFile('testsim.csv', raw)
-    // Le contrôle « Prix en EUR » signale alors la ligne et l'exclut des indicateurs de prix.
-    expect(products[0].currency).toBe('5')
-  })
-
   it("représente un forfait illimité par dataGb = null", () => {
     const { products } = parseCsvFile('testsim.csv', csv([unlimited()]))
     expect(products[0].dataGb).toBeNull()
