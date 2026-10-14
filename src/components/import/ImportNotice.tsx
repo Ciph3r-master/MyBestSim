@@ -7,11 +7,19 @@ interface ImportNoticeProps {
   /** Nombre d'alertes qualité (avertissements + erreurs) sur le catalogue chargé. */
   qualityAlerts: number
   onShowQuality: () => void
+  onShowChanges: () => void
+}
+
+/** « 1 fichier mis à jour », « 2 fichiers ajoutés », « 1 fichier chargé »… selon ce que l'import a fait. */
+function headline(mode: 'merge' | 'replace', imported: number, overwritten: number): string {
+  if (mode === 'replace') return formatCount(imported, 'fichier chargé', 'fichiers chargés')
+  if (overwritten === imported) return formatCount(imported, 'fichier mis à jour', 'fichiers mis à jour')
+  return formatCount(imported, 'fichier ajouté', 'fichiers ajoutés')
 }
 
 /** Compte rendu du dernier import : fichiers chargés, refusés, et lien vers la qualité. */
-export function ImportNotice({ qualityAlerts, onShowQuality }: ImportNoticeProps) {
-  const { lastImport, dismissLastImport } = useCatalog()
+export function ImportNotice({ qualityAlerts, onShowQuality, onShowChanges }: ImportNoticeProps) {
+  const { lastImport, lastChanges, dismissLastImport } = useCatalog()
   if (!lastImport) return null
 
   const { imported, rejected, overwritten, mode } = lastImport
@@ -24,13 +32,17 @@ export function ImportNotice({ qualityAlerts, onShowQuality }: ImportNoticeProps
       <div className={styles.body}>
         {success ? (
           <p>
-            <strong>
-              {mode === 'merge'
-                ? formatCount(imported.length, 'fichier ajouté', 'fichiers ajoutés')
-                : formatCount(imported.length, 'fichier chargé', 'fichiers chargés')}
-            </strong>
+            <strong>{headline(mode, imported.length, overwritten.length)}</strong>
             {mode === 'replace' && ' (catalogue remplacé)'}
-            {overwritten.length > 0 && ` · ${overwritten.join(', ')} mis à jour`}
+            {overwritten.length > 0 && overwritten.length < imported.length && ` · dont ${overwritten.join(', ')} mis à jour`}
+            {' · '}
+            {lastChanges?.diff.hasChanges ? (
+              <button type="button" className={styles.link} onClick={onShowChanges}>
+                voir les changements
+              </button>
+            ) : (
+              'aucun changement de produit'
+            )}
             {' · '}
             {qualityAlerts > 0 ? (
               <button type="button" className={styles.link} onClick={onShowQuality}>

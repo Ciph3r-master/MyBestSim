@@ -2,11 +2,10 @@ import { createContext } from 'react'
 import type { Catalog } from '@/types/catalog'
 import type { RejectedFile } from '@/services/fileImport'
 
-/**
- * - `merge` : les fichiers importés s'ajoutent au catalogue ; un fichier de même nom remplace l'ancien.
- * - `replace` : seuls les fichiers importés sont pris en compte.
- */
-export type ImportMode = 'merge' | 'replace'
+import type { ImportMode } from '@/services/catalogSource'
+import type { CatalogDiff } from '@/services/catalogDiff'
+
+export type { ImportMode }
 
 export interface ImportResult {
   mode: ImportMode
@@ -25,6 +24,14 @@ export interface LoadedFile {
   rowCount: number
 }
 
+/** Changements apportés par le dernier import (catalogue avant / après). */
+export interface ImportChanges {
+  diff: CatalogDiff
+  files: string[]
+  mode: ImportMode
+  at: Date
+}
+
 export interface CatalogContextValue {
   /** Catalogue construit à partir des seuls fichiers activés. */
   catalog: Catalog
@@ -41,6 +48,8 @@ export interface CatalogContextValue {
   setImportMode: (mode: ImportMode) => void
   importFiles: (files: Iterable<File>) => Promise<ImportResult>
   lastImport: ImportResult | null
+  /** Conservé jusqu'au prochain import ou à la réinitialisation (contrairement au message d'import). */
+  lastChanges: ImportChanges | null
   dismissLastImport: () => void
   reset: () => void
 }
