@@ -1,11 +1,13 @@
 .pill {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 20px;
-  padding: 8px 10px 8px 16px;
+  gap: 10px;
+  /* Même hauteur que la barre d'onglets à côté de laquelle il s'affiche. */
+  min-height: 50px;
+  padding: 5px 8px 5px 18px;
   border-radius: 999px;
   font-size: 14px;
+  white-space: nowrap;
 }
 
 .clear {
@@ -22,4 +24,25 @@
 
 .clear:hover {
   background: rgba(255, 255, 255, 0.3);
+}
+
+.products {
+  padding: 4px 10px;
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.products:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.products:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
 }
