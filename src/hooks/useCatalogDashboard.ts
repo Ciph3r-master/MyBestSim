@@ -1,7 +1,9 @@
 import { useCallback, useMemo, useState } from 'react'
 import { computeStats } from '@/services/catalogStats'
 import { computeQualityReport } from '@/services/dataQuality'
+import { readUrlParam } from '@/utils/urlState'
 import { useCatalog } from './useCatalog'
+import { useSyncUrlParam } from './useUrlState'
 
 /**
  * État du dashboard : fournisseur sélectionné et statistiques associées.
@@ -10,10 +12,11 @@ import { useCatalog } from './useCatalog'
  */
 export function useCatalogDashboard() {
   const { catalog } = useCatalog()
-  const [selectedProvider, setProvider] = useState<string | null>(null)
+  const [selectedProvider, setProvider] = useState<string | null>(() => readUrlParam('provider'))
 
-  // Un fournisseur sélectionné qui disparaît après un import n'est plus appliqué.
+  // Un fournisseur sélectionné qui disparaît après un import (ou inconnu dans un lien) n'est pas appliqué.
   const provider = selectedProvider && catalog.providers.includes(selectedProvider) ? selectedProvider : null
+  useSyncUrlParam('provider', provider)
 
   const globalStats = useMemo(() => computeStats(catalog.products), [catalog])
   const qualityReport = useMemo(() => computeQualityReport(catalog), [catalog])
@@ -28,5 +31,11 @@ export function useCatalogDashboard() {
     [],
   )
 
-  return { catalog, provider, setProvider, toggleProvider, stats, globalStats, qualityReport }
+  // Produits visibles avec le filtre fournisseur : base des sélections du panneau de détail.
+  const scopedProducts = useMemo(
+    () => (provider ? catalog.products.filter((p) => p.provider === provider) : catalog.products),
+    [catalog, provider],
+  )
+
+  return { catalog, provider, setProvider, toggleProvider, stats, globalStats, qualityReport, scopedProducts }
 }
