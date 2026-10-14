@@ -1,0 +1,57 @@
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid currentColor;
+  font-size: 13px;
+  animation: slide 0.2s ease;
+}
+
+.ok { color: var(--teal); background: rgba(94, 234, 212, 0.1); }
+.warning { color: var(--amber); background: rgba(251, 191, 36, 0.1); }
+.error { color: var(--red); background: rgba(248, 113, 113, 0.1); }
+
+.body {
+  flex: 1;
+  color: var(--text);
+}
+
+.body p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.rejected {
+  margin-top: 4px !important;
+  color: var(--text-soft);
+}
+
+.link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--amber);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.close {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+}
+
+@keyframes slide {
+  from { opacity: 0; transform: translateY(-6px); }
+}

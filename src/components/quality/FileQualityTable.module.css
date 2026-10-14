@@ -1,0 +1,114 @@
+.scroll {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th {
+  padding: 0 12px 10px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  white-space: nowrap;
+}
+
+.table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.file {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+
+.issues {
+  color: var(--text-muted);
+  white-space: normal !important;
+}
+
+.issue {
+  display: block;
+  padding-left: 10px;
+  border-left: 2px solid currentColor;
+  line-height: 1.6;
+}
+
+.issue + .issue {
+  margin-top: 2px;
+}
+
+.warning { color: var(--amber); }
+.error { color: var(--red); }
+
+.disabledRow td:not(:first-child) {
+  opacity: 0.45;
+}
+
+.off {
+  display: inline-block;
+  padding: 3px 9px;
+  border: 1px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.tag {
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: rgba(94, 234, 212, 0.15);
+  color: var(--teal);
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.disabledNote {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--text-soft);
+}
+
+.disabledNote button {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--teal);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* L'interrupteur reste à pleine opacité pour rester visiblement actionnable. */
+:global(html) {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global(html) {
+    scroll-behavior: auto;
+  }
+}

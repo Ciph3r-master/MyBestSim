@@ -1,0 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg: #0b0d1f;
+  --accent: #8b9cff;
+  --teal: #5eead4;
+  --pink: #f9a8d4;
+  --amber: #fbbf24;
+  --red: #f87171;
+  --text: #f4f5ff;
+  --text-soft: rgba(255, 255, 255, 0.7);
+  --text-muted: rgba(255, 255, 255, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Recharts dessine un contour de focus disgracieux au clic. */
+.recharts-wrapper *:focus {
+  outline: none;
+}

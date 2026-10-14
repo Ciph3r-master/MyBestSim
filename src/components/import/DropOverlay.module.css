@@ -1,0 +1,68 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(11, 13, 31, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: fade 0.15s ease;
+  pointer-events: none;
+}
+
+.target {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: min(560px, 100%);
+  padding: 48px 32px;
+  border: 2px dashed var(--teal);
+  border-radius: 28px;
+  background: rgba(94, 234, 212, 0.08);
+  text-align: center;
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 8px;
+  border-radius: 24px;
+  background: rgba(94, 234, 212, 0.15);
+  color: var(--teal);
+  animation: bounce 1s ease-in-out infinite alternate;
+}
+
+.title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.hint {
+  margin: 0;
+  color: var(--text-soft);
+}
+
+.privacy {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+@keyframes fade {
+  from { opacity: 0; }
+}
+
+@keyframes bounce {
+  to { transform: translateY(-6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .icon { animation: none; }
+}

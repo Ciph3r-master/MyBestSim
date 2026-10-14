@@ -1,0 +1,63 @@
+.item {
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid var(--status-color);
+}
+
+.ok { --status-color: var(--teal); }
+.info { --status-color: var(--accent); }
+.warning { --status-color: var(--amber); }
+.error { --status-color: var(--red); }
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.label {
+  flex: 1;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--status-color);
+  font-variant-numeric: tabular-nums;
+}
+
+.detail {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-soft);
+}
+
+.examples {
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.examples summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 600;
+  width: fit-content;
+}
+
+.examples ul {
+  margin: 8px 0 0;
+  padding: 10px 12px 10px 28px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.8);
+  overflow-wrap: anywhere;
+}
