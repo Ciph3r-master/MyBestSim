@@ -21,8 +21,15 @@ export function productsToCsv(products: Product[]): string {
     network: p.network,
     top_up: p.topUp ? 'oui' : 'non',
   }))
-  return Papa.unparse({ fields: [...EXPECTED_COLUMNS], data: rows.map((r) => EXPECTED_COLUMNS.map((c) => r[c])) })
+  return Papa.unparse(
+    { fields: [...EXPECTED_COLUMNS], data: rows.map((r) => EXPECTED_COLUMNS.map((c) => r[c])) },
+    // Les données viennent de fichiers importés : une valeur comme « =HYPERLINK(…) » serait exécutée
+    // par Excel à l'ouverture. PapaParse la préfixe d'une apostrophe pour qu'elle reste du texte.
+    { escapeFormulae: true },
+  )
 }
+
+export const REVOKE_DELAY_MS = 1000
 
 /** Déclenche le téléchargement d'un CSV dans le navigateur (BOM UTF-8 pour qu'Excel lise les accents). */
 export function downloadCsv(content: string, fileName: string) {
@@ -31,5 +38,6 @@ export function downloadCsv(content: string, fileName: string) {
   document.body.append(link)
   link.click()
   link.remove()
-  URL.revokeObjectURL(url)
+  // Libérer l'URL immédiatement peut annuler le téléchargement sur certains navigateurs : on laisse le temps de démarrer.
+  setTimeout(() => URL.revokeObjectURL(url), REVOKE_DELAY_MS)
 }
