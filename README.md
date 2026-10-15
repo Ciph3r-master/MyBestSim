@@ -2,6 +2,44 @@
 
 Dashboard React + TypeScript (Vite) qui lit automatiquement les CSV fournisseurs et affiche les statistiques clés du catalogue.
 
+## Fonctionnalités
+
+**Statistiques demandées (partie 1)**
+- Nombre total de cartes eSIM, couvertes en « 50 pays + 4 zones »
+- Produits à plus de 100 €
+- Fourchette de prix (le moins cher et le plus cher)
+- Data moyenne par carte, avec la médiane (illimités exclus)
+- Prix moyen global, avec la médiane et le prix moyen au Go
+- Répartition par fournisseur (un clic sur une barre filtre tout le dashboard)
+
+**Analyses complémentaires**
+- Distribution des prix et des volumes de data
+- Prix moyen au Go et indice de prix à offre égale par fournisseur
+- Comparateur par destination : meilleure offre par volume, à durée égale
+- Destinations les mieux couvertes, pays et zones multi-pays séparés
+- Caractéristiques (5G, rechargeables, illimités, durées) et produits extrêmes
+
+**Détail des produits**
+- Presque chaque chiffre, barre ou destination est cliquable et ouvre un panneau latéral listant les produits concernés
+- Résumé de la sélection, tableau triable avec recherche, fiche produit avec sa position sur le marché
+- Export CSV de la sélection, au format fournisseur et réimportable
+
+**Qualité des données**
+- 13 contrôles automatiques (structure, doublons, cohérence, prix aberrants), avec exemples
+- Détail par fichier, activation ou désactivation d'un fichier sans le supprimer
+- Prix hors EUR exclus des calculs de prix, signalés par un bandeau
+
+**Import et suivi**
+- Glisser-déposer de CSV, traité entièrement dans le navigateur, en mode « Ajouter » ou « Remplacer »
+- Fournisseur reconnu par le contenu : `airalo_2026-10-15.csv` remplace `airalo.csv`
+- Onglet « Changements » : produits ajoutés et retirés, hausses et baisses de prix par rapport à l'import précédent
+
+**Navigation et qualité technique**
+- Lien partageable : onglet, fournisseur et comparateur conservés dans l'URL
+- Page d'accueil (`/`) vers le dashboard (`/dashboard/`) et l'article de la partie 2 (`/article/`)
+- Responsive, accessible au clavier, score Lighthouse mobile de 84 en local
+- 114 tests unitaires sur la logique métier
+
 ## Lancer
 
 ```bash
@@ -13,7 +51,7 @@ npm test         # tests unitaires (Vitest)
 
 ## Tests
 
-111 tests unitaires (Vitest), `npm test`. Toute la logique métier est dans `src/services/`, sans React, ce qui permet de la tester isolément : **97 % des services couverts** (lignes).
+114 tests unitaires (Vitest), `npm test`. Toute la logique métier est dans `src/services/`, sans React, ce qui permet de la tester isolément : **97 % des services couverts** (lignes).
 
 **Ce qui est testé**
 
