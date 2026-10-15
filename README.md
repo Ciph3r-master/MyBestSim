@@ -1,5 +1,7 @@
 # MyBestSim · Dashboard catalogue eSIM
 
+[![Tests unitaires](https://github.com/Ciph3r-master/MyBestSim/actions/workflows/tests.yml/badge.svg)](https://github.com/Ciph3r-master/MyBestSim/actions/workflows/tests.yml)
+
 Dashboard React + TypeScript (Vite) qui lit automatiquement les CSV fournisseurs et affiche les statistiques clés du catalogue.
 
 ## Fonctionnalités
