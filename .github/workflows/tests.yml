@@ -1,4 +1,4 @@
-name: Tests unitaires
+name: CI
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 
 # Une nouvelle exécution sur la même branche annule la précédente.
 concurrency:
-  group: tests-${{ github.ref }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   test:
-    name: Vitest
+    name: Typage, lint, tests et build
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -34,5 +34,12 @@ jobs:
       - name: Installer les dépendances
         run: npm ci
 
+      - name: Vérifier le style du code (oxlint)
+        run: npm run lint
+
       - name: Lancer les tests unitaires
         run: npm test
+
+      # `npm run build` lance d'abord `tsc -b` : le typage est vérifié en même temps que le build.
+      - name: Vérifier le typage et construire le site
+        run: npm run build

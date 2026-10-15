@@ -1,6 +1,6 @@
 # MyBestSim · Dashboard catalogue eSIM
 
-[![Tests unitaires](https://github.com/Ciph3r-master/MyBestSim/actions/workflows/tests.yml/badge.svg)](https://github.com/Ciph3r-master/MyBestSim/actions/workflows/tests.yml)
+[![CI](https://github.com/Ciph3r-master/MyBestSim/actions/workflows/tests.yml/badge.svg)](https://github.com/Ciph3r-master/MyBestSim/actions/workflows/tests.yml)
 
 Dashboard React + TypeScript (Vite) qui lit automatiquement les CSV fournisseurs et affiche les statistiques clés du catalogue.
 
@@ -40,7 +40,7 @@ Dashboard React + TypeScript (Vite) qui lit automatiquement les CSV fournisseurs
 - Lien partageable : onglet, fournisseur et comparateur conservés dans l'URL
 - Page d'accueil (`/`) vers le dashboard (`/dashboard/`) et l'article de la partie 2 (`/article/`)
 - Responsive, accessible au clavier, score Lighthouse mobile de 84 en local
-- 114 tests unitaires sur la logique métier
+- 134 tests unitaires sur la logique métier et les composants critiques, lancés en CI avec le lint et le build
 
 ## Lancer
 
@@ -53,26 +53,27 @@ npm test         # tests unitaires (Vitest)
 
 ## Tests
 
-114 tests unitaires (Vitest), `npm test`. Toute la logique métier est dans `src/services/`, sans React, ce qui permet de la tester isolément : **97 % des services couverts** (lignes).
+134 tests unitaires (Vitest), `npm test`, relancés à chaque push par GitHub Actions avec le lint (oxlint), le typage et le build. Toute la logique métier est dans `src/services/`, sans React, ce qui permet de la tester isolément : **97 % des services couverts** (lignes).
 
 **Ce qui est testé**
 
-- **Chargement des CSV** : lignes valides, rejets avec numéro de ligne et raison, colonnes manquantes, illimités, doublons de SKU (conservés dans le fichier dont ils portent le préfixe, quel que soit l'ordre des fichiers), noms de fichiers datés ou versionnés (`airalo_2026-10-15.csv`, `airalo_v2.csv`, `airalo (1).csv` → préfixe `airalo-`).
+- **Chargement des CSV** : lignes valides, rejets avec numéro de ligne et raison (ligne tronquée, fournisseur ou durée de validité manquants), colonnes manquantes, illimités, doublons de SKU (conservés dans le fichier dont ils portent le préfixe, quel que soit l'ordre des fichiers), noms de fichiers datés ou versionnés (`airalo_2026-10-15.csv`, `airalo_v2.csv`, `airalo (1).csv` → préfixe `airalo-`).
 - **Statistiques** : seuil strict « > 100 € », exclusion des prix hors EUR, illimités hors data moyenne, « — » plutôt que 0 €, pays et zones séparés, indice à offre égale.
 - **Contrôles qualité : chacun est testé dans son cas d'échec**, pas seulement « validé » sur les données d'origine : fichier sans colonnes attendues, deux fournisseurs dans un fichier, ligne en double sous deux SKU, nom produit incohérent, conflit code/nom de destination, prix aberrant (et zone non confondue avec un prix aberrant), devise étrangère imputée à son fichier, prix « 12,5 » non protégé qui décale les colonnes.
 - **Gestion des fichiers** (`catalogSource.ts`) : ajout, remplacement d'un fournisseur par une version au nom différent (`airalo_2026-10-15.csv` remplace `airalo.csv`), mise à jour sous le même nom, remplacement complet, réactivation d'un fichier réimporté, retour à l'état d'origine.
 - **Comparaison d'imports** (`catalogDiff.ts`) : ajouts, retraits, hausses et baisses de prix, autres modifications, changement de devise non compté comme une hausse, nouvelle version réaliste d'`airalo.csv`.
 - **URL** (`urlState.ts`) : lecture, mise à jour, encodage des accents, compatibilité de l'ancien lien `#qualite`.
 - **Destinations** : variantes d'écriture reconnues (Viêt Nam, Rép. dominicaine), pièges refusés (Europe ≠ Union européenne), zones détectées sans liste en dur.
-- **Panneau de détail** : sélections (mêmes effectifs que les graphiques), tri sur chaque colonne, recherche, position d'un produit sur le marché, **export CSV réimportable à l'identique** (aller-retour).
+- **Panneau de détail** : sélections (mêmes effectifs que les graphiques), tri sur chaque colonne, recherche, position d'un produit sur le marché, **export CSV réimportable à l'identique** (aller-retour), formules neutralisées à l'export et URL du fichier libérée après le téléchargement.
+- **Imports** (`catalogStore.ts`, `CatalogProvider`) : deux imports qui se chevauchent gardent les deux fichiers, une erreur inattendue est affichée au lieu d'échouer en silence, un fichier déjà lu n'est pas relu (cache).
+- **Composants critiques** (jsdom + Testing Library) : Error Boundary qui isole une erreur d'affichage, navigation au clavier des onglets et des choix segmentés (flèches, Début, Fin).
 - **Chiffres de la partie 1 verrouillés** sur le jeu MyBestSim : 5 056 cartes, 56 > 100 €, 5,36 € → 154,63 €, 29,30 € de moyenne, 14,5 Go, 50 pays + 4 zones.
 
 **Ce que les tests ont fait corriger** : un SKU en double attribué selon l'ordre alphabétique des fichiers ; un message « prix invalide («  ») » pour un prix vide (devenu « prix manquant ») ; « Données d'origine » encore affiché après avoir tout réactivé.
 
 **Ce qui n'est pas couvert par les tests unitaires**
 
-- **Les composants React** (affichage, graphiques, panneau) : ils ne contiennent presque pas de logique. Ils ont été vérifiés par des parcours automatisés dans un navigateur (Playwright) pendant le développement, mais ces scripts ne sont pas intégrés au dépôt.
-- **Le téléchargement du fichier exporté** (`downloadCsv`), qui dépend du navigateur ; le contenu exporté, lui, est testé.
+- **Les autres composants React** (affichage, graphiques, panneau) : ils ne contiennent presque pas de logique. Ils ont été vérifiés par des parcours automatisés dans un navigateur (Playwright) pendant le développement, mais ces scripts ne sont pas intégrés au dépôt.
 - **Sensibilité à l'environnement** : les tests de reconnaissance des pays s'appuient sur les noms ISO fournis par Node (données CLDR) ; une mise à jour majeure de Node pourrait modifier un libellé attendu (ex. « Viêt Nam »).
 
 ## Architecture
