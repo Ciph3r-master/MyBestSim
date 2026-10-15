@@ -31,7 +31,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Paire divergente validée (daltonisme, contraste) : bleu = baisse, rouge = hausse ; le signe ▲/▼ double l'information. */
 .down { color: #7fb2f0; font-weight: 600; }
 .up { color: #f19a9a; font-weight: 600; }
 
