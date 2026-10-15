@@ -75,7 +75,7 @@ function checkInvalidRows(files: FileReport[]): QualityCheck {
     label: 'Lignes exploitables',
     status: invalid.length ? 'error' : 'ok',
     value: invalid.length ? plural(invalid.length, 'ligne rejetée', 'lignes rejetées') : `${formatNumber(total)}/${formatNumber(total)} lignes`,
-    detail: 'Une ligne est rejetée si son SKU est vide, si son prix est absent ou nul, ou si un forfait non illimité n\'a pas de volume de data.',
+    detail: 'Une ligne est rejetée si elle est incomplète (colonnes manquantes), si son SKU ou son fournisseur est vide, si son prix ou sa durée de validité est absent ou nul, ou si un forfait non illimité n\'a pas de volume de data.',
     examples: invalid.map((r) => `${r.fileName} l.${r.line} (${r.sku || 'sans SKU'}) : ${r.reason}`),
     fileIssues: issuesFromReports(files, (f) =>
       f.invalidRows.length ? plural(f.invalidRows.length, 'ligne rejetée', 'lignes rejetées') : null,

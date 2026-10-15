@@ -45,30 +45,42 @@ const ownsSku = (p: Product) => p.sku.startsWith(skuPrefixOf(p.sourceFile))
 
 /** Normalise une ligne, ou renvoie la raison de son rejet. */
 function normalizeRow(row: RawProductRow, sourceFile: string): Product | string {
-  if (!row.sku?.trim()) return 'SKU manquant'
+  // Une ligne tronquée (moins de champs que l'en-tête) laisse des colonnes à `undefined` :
+  // elle est rejetée avec la liste des colonnes absentes, au lieu de faire échouer tout le fichier.
+  const absent = EXPECTED_COLUMNS.filter((column) => row[column] === undefined)
+  if (absent.length) return `ligne incomplète (colonnes manquantes : ${absent.join(', ')})`
+  const field = (column: keyof RawProductRow) => (row[column] ?? '').trim()
 
-  if (!row.price?.trim()) return 'prix manquant'
-  const price = toNumber(row.price)
-  if (price == null || price <= 0) return `prix invalide (« ${row.price.trim()} »)`
+  if (!field('sku')) return 'SKU manquant'
+  if (!field('provider')) return 'fournisseur manquant'
 
-  const dataDisplay = row.data_display?.trim() ?? ''
+  if (!field('price')) return 'prix manquant'
+  const price = toNumber(field('price'))
+  if (price == null || price <= 0) return `prix invalide (« ${field('price')} »)`
+
+  const validityDays = toNumber(field('validity_days'))
+  if (validityDays == null || validityDays <= 0) {
+    return field('validity_days') ? `durée de validité invalide (« ${field('validity_days')} »)` : 'durée de validité manquante'
+  }
+
+  const dataDisplay = field('data_display')
   const unlimited = /illimit/i.test(dataDisplay)
-  const dataGb = toNumber(row.data_gb)
+  const dataGb = toNumber(field('data_gb'))
   if (!unlimited && dataGb == null) return 'volume de data manquant pour un forfait non illimité'
 
   return {
-    sku: row.sku.trim(),
-    provider: row.provider.trim(),
-    productName: row.product_name.trim(),
-    countryCode: row.country_code.trim(),
-    countryName: row.country_name.trim(),
+    sku: field('sku'),
+    provider: field('provider'),
+    productName: field('product_name'),
+    countryCode: field('country_code'),
+    countryName: field('country_name'),
     dataGb: unlimited ? null : dataGb,
-    validityDays: toNumber(row.validity_days) ?? 0,
+    validityDays,
     price,
-    network: row.network.trim(),
-    topUp: row.top_up.trim().toLowerCase() === 'oui',
+    network: field('network'),
+    topUp: field('top_up').toLowerCase() === 'oui',
     dataDisplay,
-    currency: row.currency.trim(),
+    currency: field('currency'),
     sourceFile,
   }
 }
@@ -111,21 +123,50 @@ export function parseCsvFile(fileName: string, content: string): { products: Pro
 
 export type ParsedFile = ReturnType<typeof parseCsvFile>
 
+type Parser = (fileName: string, content: string) => ParsedFile
+
 /**
  * Fournisseur d'un fichier, lu dans son contenu : `null` si le fichier est inexploitable
  * ou mélange plusieurs fournisseurs.
  */
-export function providerOfCsv(fileName: string, content: string): string | null {
-  const { providers } = parseCsvFile(fileName, content).report
+export function providerOfCsv(fileName: string, content: string, parse: Parser = parseCsvFile): string | null {
+  const { providers } = parse(fileName, content).report
   return providers.length === 1 ? providers[0] : null
 }
 
-
 /** Lit tous les fichiers (indexés par nom), triés par nom. */
-export function parseCsvFiles(files: Record<string, string>): ParsedFile[] {
+export function parseCsvFiles(files: Record<string, string>, parse: Parser = parseCsvFile): ParsedFile[] {
   return Object.entries(files)
-    .map(([name, content]) => parseCsvFile(fileNameOf(name), content))
+    .map(([name, content]) => parse(fileNameOf(name), content))
     .sort((a, b) => a.report.fileName.localeCompare(b.report.fileName))
+}
+
+export interface ParseCache {
+  parse: Parser
+  parseAll: (files: Record<string, string>) => ParsedFile[]
+  providerOf: (fileName: string, content: string) => string | null
+}
+
+/**
+ * Cache de lecture : un fichier n'est relu que si son contenu a changé. Un import ne lit donc que
+ * les nouveaux fichiers, au lieu de relire tout le catalogue (reconnaissance du fournisseur,
+ * comparaison avant/après, affichage). Les résultats sont partagés : `assembleCatalog` ne les modifie pas.
+ */
+export function createParseCache(): ParseCache {
+  const entries = new Map<string, { content: string; parsed: ParsedFile }>()
+  const parse: Parser = (fileName, content) => {
+    const name = fileNameOf(fileName)
+    const hit = entries.get(name)
+    if (hit && hit.content === content) return hit.parsed
+    const parsed = parseCsvFile(name, content)
+    entries.set(name, { content, parsed })
+    return parsed
+  }
+  return {
+    parse,
+    parseAll: (files) => parseCsvFiles(files, parse),
+    providerOf: (fileName, content) => providerOfCsv(fileName, content, parse),
+  }
 }
 
 /** Assemble le catalogue à partir de fichiers déjà lus (par exemple les seuls fichiers activés). */

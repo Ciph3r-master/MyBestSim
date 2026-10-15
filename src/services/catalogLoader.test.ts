@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import { csv, unlimited } from '@/test/csv'
-import { assembleCatalog, buildCatalog, defaultCsvFiles, fileBaseName, parseCsvFile, parseCsvFiles, providerOfCsv } from './catalogLoader'
+import {
+  assembleCatalog,
+  buildCatalog,
+  createParseCache,
+  defaultCsvFiles,
+  fileBaseName,
+  parseCsvFile,
+  parseCsvFiles,
+  providerOfCsv,
+} from './catalogLoader'
 
 describe('parseCsvFile', () => {
   it('normalise une ligne valide', () => {
@@ -34,6 +43,31 @@ describe('parseCsvFile', () => {
       [4, 'prix invalide (« 0 »)'],
       [5, 'volume de data manquant pour un forfait non illimité'],
       [6, 'SKU manquant'],
+    ])
+  })
+
+  it('rejette une ligne tronquée sans faire échouer le fichier', () => {
+    // Deuxième ligne coupée juste après le prix : currency, network et top_up sont absents.
+    const content = csv([{}, {}]).replace(/(\ntestsim-2,.*?,10),EUR,4G,oui$/, '$1')
+    expect(() => parseCsvFile('testsim.csv', content)).not.toThrow()
+    const { products, report } = parseCsvFile('testsim.csv', content)
+    expect(products.map((p) => p.sku)).toEqual(['testsim-1'])
+    expect(report.invalidRows).toEqual([
+      { line: 3, sku: 'testsim-2', reason: 'ligne incomplète (colonnes manquantes : currency, network, top_up)' },
+    ])
+  })
+
+  it('rejette une ligne sans fournisseur ou sans durée de validité exploitable', () => {
+    const { products, report } = parseCsvFile(
+      'testsim.csv',
+      csv([{ provider: ' ' }, { validity_days: '' }, { validity_days: '0' }, { validity_days: 'trente' }]),
+    )
+    expect(products).toEqual([])
+    expect(report.invalidRows.map((r) => r.reason)).toEqual([
+      'fournisseur manquant',
+      'durée de validité manquante',
+      'durée de validité invalide (« 0 »)',
+      'durée de validité invalide (« trente »)',
     ])
   })
 
@@ -124,5 +158,25 @@ describe('jeu de données MyBestSim', () => {
     expect(catalog.providers).toHaveLength(18)
     expect(catalog.duplicateSkus).toEqual([])
     expect(catalog.files.every((f) => f.invalidRows.length === 0 && f.missingColumns.length === 0)).toBe(true)
+  })
+})
+
+describe('createParseCache', () => {
+  it('ne relit un fichier que si son contenu a changé', () => {
+    const cache = createParseCache()
+    const content = csv([{}])
+    const first = cache.parse('testsim.csv', content)
+    expect(cache.parse('testsim.csv', content)).toBe(first)
+    expect(cache.parseAll({ 'testsim.csv': content })[0]).toBe(first)
+
+    const changed = cache.parse('testsim.csv', csv([{}, {}]))
+    expect(changed).not.toBe(first)
+    expect(changed.products).toHaveLength(2)
+  })
+
+  it('donne les mêmes résultats que la lecture sans cache', () => {
+    const cache = createParseCache()
+    expect(cache.parseAll(defaultCsvFiles)).toEqual(parseCsvFiles(defaultCsvFiles))
+    expect(cache.providerOf('testsim.csv', csv([{}]))).toBe(providerOfCsv('testsim.csv', csv([{}])))
   })
 })

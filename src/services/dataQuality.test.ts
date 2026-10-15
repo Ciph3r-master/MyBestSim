@@ -119,3 +119,13 @@ describe('attribution des anomalies aux fichiers', () => {
     ])
   })
 })
+
+describe('rapport qualité avec une ligne tronquée', () => {
+  it('signale la ligne rejetée au lieu de faire échouer le rapport', () => {
+    const content = csv([{}, {}]).replace(/,EUR,4G,oui$/, '')
+    const report = reportFor({ 'testsim.csv': content })
+    expect(check(report, 'invalid-rows')).toMatchObject({ status: 'error', value: '1 ligne rejetée' })
+    expect(check(report, 'invalid-rows').examples?.[0]).toContain('testsim.csv l.3 (testsim-2) : ligne incomplète')
+    expect(file(report, 'testsim.csv').status).not.toBe('ok')
+  })
+})
