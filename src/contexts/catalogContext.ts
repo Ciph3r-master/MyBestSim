@@ -2,7 +2,7 @@ import { createContext } from 'react'
 import type { Catalog } from '@/types/catalog'
 import type { RejectedFile } from '@/services/fileImport'
 
-import type { ImportMode } from '@/services/catalogSource'
+import type { FileReplacement, ImportMode } from '@/services/catalogSource'
 import type { CatalogDiff } from '@/services/catalogDiff'
 
 export type { ImportMode }
@@ -11,8 +11,8 @@ export interface ImportResult {
   mode: ImportMode
   imported: string[]
   rejected: RejectedFile[]
-  /** Fichiers importés qui ont remplacé un fichier de même nom. */
-  overwritten: string[]
+  /** Fichiers importés qui remplacent la version précédente d'un fournisseur (même fournisseur ou même nom). */
+  replacements: FileReplacement[]
 }
 
 /** Fichier chargé (d'origine ou importé), actif ou non. */

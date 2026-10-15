@@ -13,14 +13,14 @@ npm test         # tests unitaires (Vitest)
 
 ## Tests
 
-96 tests unitaires (Vitest), `npm test`. Toute la logique métier est dans `src/services/`, sans React, ce qui permet de la tester isolément : **97 % des services couverts** (lignes).
+111 tests unitaires (Vitest), `npm test`. Toute la logique métier est dans `src/services/`, sans React, ce qui permet de la tester isolément : **97 % des services couverts** (lignes).
 
 **Ce qui est testé**
 
-- **Chargement des CSV** : lignes valides, rejets avec numéro de ligne et raison, colonnes manquantes, illimités, doublons de SKU (conservés dans le fichier dont ils portent le préfixe, quel que soit l'ordre des fichiers).
+- **Chargement des CSV** : lignes valides, rejets avec numéro de ligne et raison, colonnes manquantes, illimités, doublons de SKU (conservés dans le fichier dont ils portent le préfixe, quel que soit l'ordre des fichiers), noms de fichiers datés ou versionnés (`airalo_2026-10-15.csv`, `airalo_v2.csv`, `airalo (1).csv` → préfixe `airalo-`).
 - **Statistiques** : seuil strict « > 100 € », exclusion des prix hors EUR, illimités hors data moyenne, « — » plutôt que 0 €, pays et zones séparés, indice à offre égale.
 - **Contrôles qualité : chacun est testé dans son cas d'échec**, pas seulement « validé » sur les données d'origine : fichier sans colonnes attendues, deux fournisseurs dans un fichier, ligne en double sous deux SKU, nom produit incohérent, conflit code/nom de destination, prix aberrant (et zone non confondue avec un prix aberrant), devise étrangère imputée à son fichier, prix « 12,5 » non protégé qui décale les colonnes.
-- **Gestion des fichiers** (`catalogSource.ts`) : ajout, mise à jour d'un fichier de même nom, remplacement, réactivation d'un fichier réimporté, retour à l'état d'origine.
+- **Gestion des fichiers** (`catalogSource.ts`) : ajout, remplacement d'un fournisseur par une version au nom différent (`airalo_2026-10-15.csv` remplace `airalo.csv`), mise à jour sous le même nom, remplacement complet, réactivation d'un fichier réimporté, retour à l'état d'origine.
 - **Comparaison d'imports** (`catalogDiff.ts`) : ajouts, retraits, hausses et baisses de prix, autres modifications, changement de devise non compté comme une hausse, nouvelle version réaliste d'`airalo.csv`.
 - **URL** (`urlState.ts`) : lecture, mise à jour, encodage des accents, compatibilité de l'ancien lien `#qualite`.
 - **Destinations** : variantes d'écriture reconnues (Viêt Nam, Rép. dominicaine), pièges refusés (Europe ≠ Union européenne), zones détectées sans liste en dur.
@@ -105,7 +105,7 @@ Le score en ligne dépend aussi de l'hébergeur et varie d'une mesure à l'autre
 
 **Dans le navigateur (glisser-déposer)** : déposer des CSV n'importe où sur la page, ou bouton « Importer des CSV ». Tout est traité localement (aucun envoi serveur) ; statistiques et contrôles qualité sont recalculés instantanément.
 
-- *Ajouter* (par défaut) : les fichiers s'ajoutent au catalogue, un fichier de même nom remplace l'ancien (mise à jour quotidienne d'un fournisseur).
+- *Ajouter* (par défaut) : les fichiers s'ajoutent au catalogue. Un fichier dont le **fournisseur** (lu dans la colonne `provider`) est déjà présent remplace son ancienne version, **quel que soit son nom** : on peut garder `airalo_2026-10-14.csv` et `airalo_2026-10-15.csv` côte à côte sur son disque et déposer le plus récent. Un fichier mélangeant plusieurs fournisseurs est simplement ajouté.
 - *Remplacer* : seuls les fichiers importés sont analysés.
 - « Données d'origine » revient au jeu de départ. Les fichiers non CSV, vides ou > 10 Mo sont refusés et listés.
 
@@ -156,7 +156,7 @@ Chaque import est comparé au catalogue affiché juste avant, produit par produi
 - **Résumé** : produits ajoutés, retirés, hausses et baisses de prix, variation moyenne, autres modifications (réseau, recharge, volume, durée, devise).
 - **Par fournisseur**, puis le détail : variations de prix (plus fortes d'abord), produits ajoutés (ouvrables et exportables dans le panneau de détail), produits retirés, autres modifications « avant → après ».
 - Un prix n'est comparé que dans la même devise : un passage de EUR à USD est une modification de devise, pas une hausse.
-- Cas d'usage visé : on dépose l'export du jour d'un fournisseur (même nom de fichier) et on voit immédiatement ce qui a bougé.
+- Cas d'usage visé : on dépose l'export du jour d'un fournisseur (nom libre, par exemple daté) et on voit immédiatement ce qui a bougé par rapport à la version précédente.
 
 Les changements vivent dans le navigateur, le temps de la session (pas de back-end) : ils ne sont pas inclus dans un lien partagé.
 

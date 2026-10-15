@@ -19,7 +19,7 @@ export function DropOverlay() {
         <p className={styles.title}>Déposez vos fichiers CSV</p>
         <p className={styles.hint}>
           {importMode === 'merge'
-            ? 'Ils seront ajoutés au catalogue (un fichier de même nom remplace l’ancien).'
+            ? 'Ils seront ajoutés au catalogue (un fichier d’un fournisseur déjà présent remplace son ancienne version, quel que soit son nom).'
             : 'Ils remplaceront l’ensemble du catalogue actuel.'}
         </p>
         <p className={styles.privacy}>Traitement 100 % local : aucun fichier n’est envoyé sur Internet.</p>

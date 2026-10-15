@@ -1,4 +1,5 @@
 import { useCatalog } from '@/hooks/useCatalog'
+import type { FileReplacement } from '@/services/catalogSource'
 import { formatCount } from '@/utils/format'
 import { Icon } from '@/components/ui/Icon'
 import styles from './ImportNotice.module.css'
@@ -11,10 +12,17 @@ interface ImportNoticeProps {
 }
 
 /** « 1 fichier mis à jour », « 2 fichiers ajoutés », « 1 fichier chargé »… selon ce que l'import a fait. */
-function headline(mode: 'merge' | 'replace', imported: number, overwritten: number): string {
+function headline(mode: 'merge' | 'replace', imported: number, updates: number): string {
   if (mode === 'replace') return formatCount(imported, 'fichier chargé', 'fichiers chargés')
-  if (overwritten === imported) return formatCount(imported, 'fichier mis à jour', 'fichiers mis à jour')
+  if (updates === imported) return formatCount(imported, 'fichier mis à jour', 'fichiers mis à jour')
   return formatCount(imported, 'fichier ajouté', 'fichiers ajoutés')
+}
+
+/** « airalo_2026-10-15.csv remplace airalo.csv (Airalo) » ; une mise à jour sous le même nom n'est pas détaillée. */
+function describeReplacement({ file, replaces, provider }: FileReplacement): string | null {
+  const others = replaces.filter((name) => name !== file)
+  if (!others.length) return null
+  return `${file} remplace ${others.join(', ')}${provider ? ` (${provider})` : ''}`
 }
 
 /** Compte rendu du dernier import : fichiers chargés, refusés, et lien vers la qualité. */
@@ -22,7 +30,8 @@ export function ImportNotice({ qualityAlerts, onShowQuality, onShowChanges }: Im
   const { lastImport, lastChanges, dismissLastImport } = useCatalog()
   if (!lastImport) return null
 
-  const { imported, rejected, overwritten, mode } = lastImport
+  const { imported, rejected, replacements, mode } = lastImport
+  const details = replacements.map(describeReplacement).filter(Boolean)
   const success = imported.length > 0
   const tone = !success ? styles.error : rejected.length || qualityAlerts ? styles.warning : styles.ok
 
@@ -32,9 +41,9 @@ export function ImportNotice({ qualityAlerts, onShowQuality, onShowChanges }: Im
       <div className={styles.body}>
         {success ? (
           <p>
-            <strong>{headline(mode, imported.length, overwritten.length)}</strong>
+            <strong>{headline(mode, imported.length, replacements.length)}</strong>
             {mode === 'replace' && ' (catalogue remplacé)'}
-            {overwritten.length > 0 && overwritten.length < imported.length && ` · dont ${overwritten.join(', ')} mis à jour`}
+            {details.length > 0 && ` · ${details.join(' · ')}`}
             {' · '}
             {lastChanges?.diff.hasChanges ? (
               <button type="button" className={styles.link} onClick={onShowChanges}>

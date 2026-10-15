@@ -23,8 +23,24 @@ const toNumber = (value: string | undefined): number | null => {
   return Number.isFinite(n) ? n : null
 }
 
-/** Préfixe attendu des SKU d'un fichier : « airalo.csv » → « airalo- ». */
-const skuPrefixOf = (fileName: string) => `${fileName.replace(/\.csv$/i, '')}-`
+// Suffixe de version ajouté au nom pour garder plusieurs exports côte à côte :
+// « _2026-10-15 », « -20261015 », « 15-10-2026 », « _v2 », « (1) »… (répétable : « _2026-10-15_v2 »).
+const VERSION_SUFFIX = /[\s._-]*(\(\d+\)|v\d+|\d{4}[-_.]?\d{2}[-_.]?\d{2}|\d{2}[-_.]\d{2}[-_.]\d{4})$/i
+
+/** Nom d'un fichier sans extension ni suffixe de version : « airalo_2026-10-15.csv » → « airalo ». */
+export function fileBaseName(fileName: string): string {
+  const withoutExtension = fileName.replace(/\.csv$/i, '')
+  let base = withoutExtension
+  for (let previous = ''; previous !== base; ) {
+    previous = base
+    base = base.replace(VERSION_SUFFIX, '')
+  }
+  // Un nom qui n'est qu'une date (« 2026-10-15.csv ») est gardé tel quel.
+  return base || withoutExtension
+}
+
+/** Préfixe attendu des SKU d'un fichier : « airalo.csv » ou « airalo_2026-10-15.csv » → « airalo- ». */
+const skuPrefixOf = (fileName: string) => `${fileBaseName(fileName)}-`
 const ownsSku = (p: Product) => p.sku.startsWith(skuPrefixOf(p.sourceFile))
 
 /** Normalise une ligne, ou renvoie la raison de son rejet. */
@@ -94,6 +110,15 @@ export function parseCsvFile(fileName: string, content: string): { products: Pro
 }
 
 export type ParsedFile = ReturnType<typeof parseCsvFile>
+
+/**
+ * Fournisseur d'un fichier, lu dans son contenu : `null` si le fichier est inexploitable
+ * ou mélange plusieurs fournisseurs.
+ */
+export function providerOfCsv(fileName: string, content: string): string | null {
+  const { providers } = parseCsvFile(fileName, content).report
+  return providers.length === 1 ? providers[0] : null
+}
 
 
 /** Lit tous les fichiers (indexés par nom), triés par nom. */

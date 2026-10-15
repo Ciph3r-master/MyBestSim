@@ -49,8 +49,8 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   const importFiles = useCallback(
     async (input: Iterable<File>) => {
       const { files: read, rejected } = await readCsvFiles(input)
-      const { source: next, overwritten } = applyImport(source, read, importMode)
-      const result: ImportResult = { mode: importMode, imported: Object.keys(read), rejected, overwritten }
+      const { source: next, replacements } = applyImport(source, read, importMode)
+      const result: ImportResult = { mode: importMode, imported: Object.keys(read), rejected, replacements }
       if (next !== source) {
         // Catalogue tel qu'il sera affiché après l'import (fichiers désactivés exclus), comparé à l'actuel.
         const after = assembleCatalog(parseCsvFiles(next.files).filter((f) => !next.disabled.has(f.report.fileName)))

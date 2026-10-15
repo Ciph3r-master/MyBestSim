@@ -7,7 +7,7 @@ import type { ImportMode } from '@/contexts/catalogContext'
 import styles from './DataSourceBar.module.css'
 
 const MODES: { id: ImportMode; label: string; title: string }[] = [
-  { id: 'merge', label: 'Ajouter', title: 'Ajouter au catalogue actuel (un fichier de même nom remplace l’ancien)' },
+  { id: 'merge', label: 'Ajouter', title: 'Ajouter au catalogue actuel (un fichier d’un fournisseur déjà présent remplace son ancienne version)' },
   { id: 'replace', label: 'Remplacer', title: 'Remplacer tout le catalogue par les fichiers importés' },
 ]
 

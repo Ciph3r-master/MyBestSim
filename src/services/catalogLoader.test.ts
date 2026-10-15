@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { csv, unlimited } from '@/test/csv'
-import { assembleCatalog, buildCatalog, defaultCsvFiles, parseCsvFile, parseCsvFiles } from './catalogLoader'
+import { assembleCatalog, buildCatalog, defaultCsvFiles, fileBaseName, parseCsvFile, parseCsvFiles, providerOfCsv } from './catalogLoader'
 
 describe('parseCsvFile', () => {
   it('normalise une ligne valide', () => {
@@ -47,6 +47,31 @@ describe('parseCsvFile', () => {
   it('signale les SKU dont le préfixe ne correspond pas au nom du fichier', () => {
     const { report } = parseCsvFile('testsim.csv', csv([{}, { sku: 'autre-1' }]))
     expect(report.skuPrefixMismatches).toEqual(['autre-1'])
+  })
+})
+
+describe('nom de base et fournisseur d’un fichier', () => {
+  it.each([
+    ['airalo.csv', 'airalo'],
+    ['airalo_2026-10-15.csv', 'airalo'],
+    ['airalo-20261015.csv', 'airalo'],
+    ['airalo 15-10-2026.csv', 'airalo'],
+    ['airalo_v2.csv', 'airalo'],
+    ['airalo (1).csv', 'airalo'],
+    ['airalo_2026-10-15_v2.csv', 'airalo'],
+    ['4sesim.csv', '4sesim'],
+    ['2026-10-15.csv', '2026-10-15'],
+  ])('« %s » → « %s »', (name, base) => expect(fileBaseName(name)).toBe(base))
+
+  it('accepte une version datée sans signaler ses SKU comme hors préfixe', () => {
+    const { report } = parseCsvFile('testsim_2026-10-15.csv', csv([{}]))
+    expect(report.skuPrefixMismatches).toEqual([])
+  })
+
+  it('lit le fournisseur dans le contenu', () => {
+    expect(providerOfCsv('x.csv', csv([{ provider: 'Airalo' }]))).toBe('Airalo')
+    expect(providerOfCsv('x.csv', csv([{ provider: 'A' }, { provider: 'B' }]))).toBeNull()
+    expect(providerOfCsv('x.csv', 'pas un csv')).toBeNull()
   })
 })
 
