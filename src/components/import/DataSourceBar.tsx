@@ -3,6 +3,7 @@ import { useCatalog } from '@/hooks/useCatalog'
 import { formatCount } from '@/utils/format'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { Icon } from '@/components/ui/Icon'
+import { SegmentedControl } from '@/components/ui/SegmentedControl'
 import type { ImportMode } from '@/contexts/catalogContext'
 import styles from './DataSourceBar.module.css'
 
@@ -47,21 +48,13 @@ export function DataSourceBar({ onManageFiles }: DataSourceBarProps) {
       </div>
 
       <div className={styles.actions}>
-        <div className={styles.modes} role="radiogroup" aria-label="Mode d’import">
-          {MODES.map((mode) => (
-            <button
-              key={mode.id}
-              type="button"
-              role="radio"
-              aria-checked={importMode === mode.id}
-              title={mode.title}
-              className={importMode === mode.id ? styles.modeActive : styles.mode}
-              onClick={() => setImportMode(mode.id)}
-            >
-              {mode.label}
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          label="Mode d’import"
+          options={MODES.map((m) => ({ value: m.id, label: m.label, title: m.title }))}
+          value={importMode}
+          onChange={setImportMode}
+          classNames={{ group: styles.modes, option: styles.mode, active: styles.modeActive }}
+        />
 
         <button type="button" className={styles.secondary} onClick={onManageFiles}>
           <Icon name="file" size={16} />

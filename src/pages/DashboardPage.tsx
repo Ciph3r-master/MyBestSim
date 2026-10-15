@@ -13,6 +13,7 @@ import { FILES_PANEL_ID } from '@/components/quality/FileQualityTable'
 import { ProductDetailProvider } from '@/contexts/ProductDetailProvider'
 import { Icon } from '@/components/ui/Icon'
 import { Tabs, type TabItem } from '@/components/ui/Tabs'
+import { tabPanelProps } from '@/components/ui/tabPanelProps'
 import { StatisticsSection } from './sections/StatisticsSection'
 import { DataQualitySection } from './sections/DataQualitySection'
 import { ChangesSection } from './sections/ChangesSection'
@@ -96,10 +97,11 @@ export function DashboardPage() {
         />
 
         <div className={styles.toolbar}>
-          <Tabs label="Vue du dashboard" items={tabs} value={view} onChange={setView} />
+          <Tabs label="Vue du dashboard" idPrefix="view" items={tabs} value={view} onChange={setView} />
           {view === 'stats' && provider && <ProviderFilter provider={provider} onClear={() => setProvider(null)} />}
         </div>
 
+        <div {...tabPanelProps('view', view)} className={styles.panel}>
         {view === 'stats' && catalog.products.length === 0 ? (
           <EmptyState icon="alert" title="Aucun produit exploitable">
             Les fichiers chargés ne contiennent aucune ligne valide. L’onglet{' '}
@@ -119,6 +121,7 @@ export function DashboardPage() {
         ) : (
           <DataQualitySection report={qualityReport} />
         )}
+        </div>
 
         <Footer>
           Prix en EUR · « Data moyenne » calculée sur les forfaits à volume fixe (les illimités n'ont pas de valeur en Go)

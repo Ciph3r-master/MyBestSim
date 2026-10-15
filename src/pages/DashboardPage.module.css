@@ -12,6 +12,17 @@
   margin-bottom: 24px;
 }
 
+/* Zone de contenu des onglets : focalisable au clavier (motif WAI-ARIA), sans contour au clic. */
+.panel:focus {
+  outline: none;
+}
+
+.panel:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 6px;
+  border-radius: 12px;
+}
+
 .tabBadgeInfo {
   display: grid;
   place-items: center;

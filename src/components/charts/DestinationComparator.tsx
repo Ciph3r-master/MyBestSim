@@ -11,6 +11,7 @@ import { useSyncUrlParam } from '@/hooks/useUrlState'
 import { readUrlParam } from '@/utils/urlState'
 import { selections } from '@/services/selections'
 import { Panel } from '@/components/ui/Panel'
+import { SegmentedControl } from '@/components/ui/SegmentedControl'
 import { PanelEmpty } from '@/components/ui/PanelEmpty'
 import styles from './DestinationComparator.module.css'
 
@@ -104,20 +105,13 @@ export function DestinationComparator({ products, highlightedProvider }: Destina
               ))}
           </select>
         </label>
-        <div className={styles.segmented} role="radiogroup" aria-label="Durée de validité">
-          {validities.map((v) => (
-            <button
-              key={v}
-              type="button"
-              role="radio"
-              aria-checked={activeValidity === v}
-              className={activeValidity === v ? styles.segmentActive : styles.segment}
-              onClick={() => setValidity(v)}
-            >
-              {v} jours
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          label="Durée de validité"
+          options={validities.map((v) => ({ value: v, label: `${v} jours` }))}
+          value={activeValidity}
+          onChange={(v) => v != null && setValidity(v)}
+          classNames={{ group: styles.segmented, option: styles.segment, active: styles.segmentActive }}
+        />
         <p className={styles.summary}>
           {formatCount(comparison.offers.length, 'offre')} · {formatCount(providerCount, 'fournisseur')}
         </p>
