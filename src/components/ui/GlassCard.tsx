@@ -1,7 +1,10 @@
-import type { ElementType, HTMLAttributes } from 'react'
+import type { AnchorHTMLAttributes, ElementType, HTMLAttributes } from 'react'
 import styles from './GlassCard.module.css'
 
-interface GlassCardProps extends HTMLAttributes<HTMLElement> {
+interface GlassCardProps
+  extends HTMLAttributes<HTMLElement>,
+    // Permet d'utiliser la carte comme lien (as="a").
+    Pick<AnchorHTMLAttributes<HTMLAnchorElement>, 'href' | 'target' | 'rel'> {
   as?: ElementType
   interactive?: boolean
 }
