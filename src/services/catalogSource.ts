@@ -45,7 +45,13 @@ export interface ImportOutcome {
   replacements: FileReplacement[]
 }
 
-export function applyImport(source: CatalogSource, read: Record<string, string>, mode: ImportMode): ImportOutcome {
+export function applyImport(
+  source: CatalogSource,
+  read: Record<string, string>,
+  mode: ImportMode,
+  /** Lecture du fournisseur ; injectable pour réutiliser un cache de lecture. */
+  providerOf: (fileName: string, content: string) => string | null = providerOfCsv,
+): ImportOutcome {
   const names = Object.keys(read)
   if (names.length === 0) return { source, replacements: [] }
 
@@ -55,12 +61,12 @@ export function applyImport(source: CatalogSource, read: Record<string, string>,
 
   // Le fournisseur d'un fichier est lu dans son contenu : le nom du fichier est libre.
   const loaded = Object.entries(source.files).filter(([name]) => !names.includes(name))
-  const loadedProviders = new Map(loaded.map(([name, content]) => [name, providerOfCsv(name, content)]))
+  const loadedProviders = new Map(loaded.map(([name, content]) => [name, providerOf(name, content)]))
   const replaced = new Set<string>()
   const replacements: FileReplacement[] = []
 
   for (const name of names) {
-    const provider = providerOfCsv(name, read[name])
+    const provider = providerOf(name, read[name])
     const previous = [
       ...(name in source.files ? [name] : []),
       ...(provider ? loaded.filter(([other]) => loadedProviders.get(other) === provider).map(([other]) => other) : []),

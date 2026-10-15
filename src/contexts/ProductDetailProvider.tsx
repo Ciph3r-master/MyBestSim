@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import type { Product } from '@/types/catalog'
 import type { ProductSelection } from '@/types/selection'
 import { ProductDrawer } from '@/components/detail/ProductDrawer'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { ProductDetailContext } from './productDetailContext'
 
 interface ProductDetailProviderProps {
@@ -29,16 +30,18 @@ export function ProductDetailProvider({ products, marketProducts, scopeLabel, ch
     <ProductDetailContext.Provider value={value}>
       {children}
       {stack.length > 0 && (
-        <ProductDrawer
-          selection={stack[stack.length - 1]}
-          canGoBack={stack.length > 1}
-          products={products}
-          marketProducts={marketProducts}
-          scopeLabel={scopeLabel}
-          onNavigate={push}
-          onBack={back}
-          onClose={close}
-        />
+        <ErrorBoundary>
+          <ProductDrawer
+            selection={stack[stack.length - 1]}
+            canGoBack={stack.length > 1}
+            products={products}
+            marketProducts={marketProducts}
+            scopeLabel={scopeLabel}
+            onNavigate={push}
+            onBack={back}
+            onClose={close}
+          />
+        </ErrorBoundary>
       )}
     </ProductDetailContext.Provider>
   )

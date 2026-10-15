@@ -13,6 +13,8 @@ export interface ImportResult {
   rejected: RejectedFile[]
   /** Fichiers importés qui remplacent la version précédente d'un fournisseur (même fournisseur ou même nom). */
   replacements: FileReplacement[]
+  /** Erreur inattendue pendant l'import : rien n'a été modifié, le message est affiché à l'utilisateur. */
+  error?: string
 }
 
 /** Fichier chargé (d'origine ou importé), actif ou non. */

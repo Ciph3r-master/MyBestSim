@@ -36,7 +36,7 @@ export function ImportNotice({ qualityAlerts, onShowQuality, onShowChanges }: Im
   const tone = !success ? styles.error : rejected.length || qualityAlerts ? styles.warning : styles.ok
 
   return (
-    <div className={`${styles.notice} ${tone}`} role="status">
+    <div className={`${styles.notice} ${tone}`} role={lastImport.error ? 'alert' : 'status'}>
       <Icon name={success ? 'check' : 'alert'} size={18} />
       <div className={styles.body}>
         {success ? (
@@ -64,6 +64,7 @@ export function ImportNotice({ qualityAlerts, onShowQuality, onShowChanges }: Im
         ) : (
           <p>
             <strong>Aucun fichier importé.</strong>
+            {lastImport.error && ` L’import a échoué : ${lastImport.error}. Le catalogue n’a pas été modifié.`}
           </p>
         )}
         {rejected.length > 0 && (

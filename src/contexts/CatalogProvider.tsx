@@ -1,13 +1,15 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react'
-import { assembleCatalog, defaultCsvFiles, parseCsvFiles } from '@/services/catalogLoader'
+import { useCallback, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react'
+import { assembleCatalog, createParseCache, defaultCsvFiles } from '@/services/catalogLoader'
 import {
   applyImport,
   enableAllFiles as enableAll,
   initialSource,
   isPristine,
   toggleFile as toggle,
+  type CatalogSource,
   type ImportMode,
 } from '@/services/catalogSource'
+import { createStore } from '@/services/catalogStore'
 import { readCsvFiles } from '@/services/fileImport'
 import { diffCatalogs } from '@/services/catalogDiff'
 import {
@@ -18,14 +20,29 @@ import {
   type LoadedFile,
 } from './catalogContext'
 
-export function CatalogProvider({ children }: { children: ReactNode }) {
-  const [source, setSource] = useState(() => initialSource(defaultCsvFiles))
+interface CatalogProviderProps {
+  children: ReactNode
+  /** Fichiers de départ (par défaut, les CSV intégrés au build) ; injectable pour les tests. */
+  initialFiles?: Record<string, string>
+}
+
+export function CatalogProvider({ children, initialFiles = defaultCsvFiles }: CatalogProviderProps) {
+  // Store hors React : les imports sont exécutés l'un après l'autre sur l'état courant (pas d'écrasement).
+  const [store] = useState(() => createStore(initialSource(initialFiles)))
+  // Cache de lecture : un import ne relit que les fichiers nouveaux ou modifiés.
+  const [cache] = useState(createParseCache)
+  const source = useSyncExternalStore(store.subscribe, store.getState)
+
   const [importMode, setImportMode] = useState<ImportMode>('merge')
   const [lastImport, setLastImport] = useState<ImportResult | null>(null)
   const [lastChanges, setLastChanges] = useState<ImportChanges | null>(null)
 
-  // Lecture une seule fois par jeu de fichiers ; (dés)activer un fichier ne fait que réassembler.
-  const parsed = useMemo(() => parseCsvFiles(source.files), [source.files])
+  const catalogOf = useCallback(
+    (src: CatalogSource) => assembleCatalog(cache.parseAll(src.files).filter((f) => !src.disabled.has(f.report.fileName))),
+    [cache],
+  )
+
+  const parsed = useMemo(() => cache.parseAll(source.files), [cache, source.files])
   const catalog = useMemo(
     () => assembleCatalog(parsed.filter((f) => !source.disabled.has(f.report.fileName))),
     [parsed, source.disabled],
@@ -43,36 +60,52 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     [parsed, source.disabled, source.imported],
   )
 
-  const toggleFile = useCallback((name: string) => setSource((s) => toggle(s, name)), [])
-  const enableAllFiles = useCallback(() => setSource(enableAll), [])
+  const toggleFile = useCallback((name: string) => store.setState((s) => toggle(s, name)), [store])
+  const enableAllFiles = useCallback(() => store.setState(enableAll), [store])
 
   const importFiles = useCallback(
-    async (input: Iterable<File>) => {
-      const { files: read, rejected } = await readCsvFiles(input)
-      const { source: next, replacements } = applyImport(source, read, importMode)
-      const result: ImportResult = { mode: importMode, imported: Object.keys(read), rejected, replacements }
-      if (next !== source) {
-        // Catalogue tel qu'il sera affiché après l'import (fichiers désactivés exclus), comparé à l'actuel.
-        const after = assembleCatalog(parseCsvFiles(next.files).filter((f) => !next.disabled.has(f.report.fileName)))
-        setLastChanges({
-          diff: diffCatalogs(catalog.products, after.products),
-          files: result.imported,
-          mode: importMode,
-          at: new Date(),
-        })
-      }
-      setSource(next)
-      setLastImport(result)
-      return result
+    (input: Iterable<File>) => {
+      const mode = importMode
+      return store.enqueue(async (): Promise<ImportResult> => {
+        try {
+          const { files: read, rejected } = await readCsvFiles(input)
+          // État lu au moment où l'import s'exécute, après les imports précédents.
+          const before = store.getState()
+          const { source: next, replacements } = applyImport(before, read, mode, cache.providerOf)
+          const result: ImportResult = { mode, imported: Object.keys(read), rejected, replacements }
+          if (next !== before) {
+            setLastChanges({
+              diff: diffCatalogs(catalogOf(before).products, catalogOf(next).products),
+              files: result.imported,
+              mode,
+              at: new Date(),
+            })
+          }
+          store.setState(() => next)
+          setLastImport(result)
+          return result
+        } catch (error) {
+          // Une erreur inattendue ne doit jamais faire échouer l'import en silence.
+          const result: ImportResult = {
+            mode,
+            imported: [],
+            rejected: [],
+            replacements: [],
+            error: error instanceof Error ? error.message : String(error),
+          }
+          setLastImport(result)
+          return result
+        }
+      })
     },
-    [importMode, source, catalog],
+    [store, cache, catalogOf, importMode],
   )
 
   const reset = useCallback(() => {
-    setSource(initialSource(defaultCsvFiles))
+    store.setState(() => initialSource(initialFiles))
     setLastImport(null)
     setLastChanges(null)
-  }, [])
+  }, [store, initialFiles])
 
   const dismissLastImport = useCallback(() => setLastImport(null), [])
 
@@ -82,7 +115,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       files,
       toggleFile,
       enableAllFiles,
-      isDefault: isPristine(source, defaultCsvFiles),
+      isDefault: isPristine(source, initialFiles),
       importedFiles: source.imported,
       importMode,
       setImportMode,
@@ -98,6 +131,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       toggleFile,
       enableAllFiles,
       source,
+      initialFiles,
       importMode,
       importFiles,
       lastImport,
