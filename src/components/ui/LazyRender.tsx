@@ -1,4 +1,5 @@
 import { Suspense, useEffect, useRef, useState, type ReactNode } from 'react'
+import { ErrorBoundary } from './ErrorBoundary'
 
 interface LazyRenderProps {
   /** Hauteur réservée : identique à celle du contenu, pour qu'il n'y ait aucun saut de mise en page. */
@@ -32,5 +33,12 @@ export function LazyRender({ height, children }: LazyRenderProps) {
 
   const placeholder = <div ref={ref} style={{ height }} aria-hidden />
   // Le contenu peut lui-même être chargé à la demande (React.lazy) : même emplacement réservé pendant ce temps.
-  return visible ? <Suspense fallback={placeholder}>{children}</Suspense> : placeholder
+  // Un échec de chargement ou de rendu du contenu reste confiné à cet emplacement (même hauteur).
+  return visible ? (
+    <ErrorBoundary minHeight={height}>
+      <Suspense fallback={placeholder}>{children}</Suspense>
+    </ErrorBoundary>
+  ) : (
+    placeholder
+  )
 }
